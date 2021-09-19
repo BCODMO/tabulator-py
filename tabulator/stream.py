@@ -409,6 +409,7 @@ class Stream(object):
                 raise exceptions.FormatError(message)
             parser_class = helpers.import_attribute(config.PARSERS[format])
         parser_options = helpers.extract_options(options, parser_class.options)
+        parser_options["stream"] = self
         self.__parser = parser_class(self.__loader,
                 force_parse=self.__force_parse,
                 **parser_options)
