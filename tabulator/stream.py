@@ -141,39 +141,41 @@ class Stream(object):
 
     # Public
 
-    def __init__(self,
-                 source,
-                 headers=None,
-                 scheme=None,
-                 format=None,
-                 encoding=None,
-                 compression=None,
-                 allow_html=False,
-                 sample_size=config.DEFAULT_SAMPLE_SIZE,
-                 bytes_sample_size=config.DEFAULT_BYTES_SAMPLE_SIZE,
-                 ignore_blank_headers=False,
-                 ignore_listed_headers=None,
-                 ignore_not_listed_headers=None,
-                 multiline_headers_joiner=' ',
-                 multiline_headers_duplicates=False,
-                 hashing_algorithm='sha256',
-                 force_strings=False,
-                 force_parse=False,
-                 pick_columns=None,
-                 skip_columns=None,
-                 pick_fields=None,
-                 skip_fields=None,
-                 limit_fields=None,
-                 offset_fields=None,
-                 pick_rows=None,
-                 skip_rows=None,
-                 limit_rows=None,
-                 offset_rows=None,
-                 post_parse=[],
-                 custom_loaders={},
-                 custom_parsers={},
-                 custom_writers={},
-                 **options):
+    def __init__(
+        self,
+        source,
+        headers=None,
+        scheme=None,
+        format=None,
+        encoding=None,
+        compression=None,
+        allow_html=False,
+        sample_size=config.DEFAULT_SAMPLE_SIZE,
+        bytes_sample_size=config.DEFAULT_BYTES_SAMPLE_SIZE,
+        ignore_blank_headers=False,
+        ignore_listed_headers=None,
+        ignore_not_listed_headers=None,
+        multiline_headers_joiner=" ",
+        multiline_headers_duplicates=False,
+        hashing_algorithm="sha256",
+        force_strings=False,
+        force_parse=False,
+        pick_columns=None,
+        skip_columns=None,
+        pick_fields=None,
+        skip_fields=None,
+        limit_fields=None,
+        offset_fields=None,
+        pick_rows=None,
+        skip_rows=None,
+        limit_rows=None,
+        offset_rows=None,
+        post_parse=[],
+        custom_loaders={},
+        custom_parsers={},
+        custom_writers={},
+        **options
+    ):
 
         # Translate aliases
         if pick_fields is not None:
@@ -184,7 +186,7 @@ class Stream(object):
             ignore_not_listed_headers = pick_columns
         if skip_columns is not None:
             ignore_listed_headers = skip_columns
-            if '' in skip_columns:
+            if "" in skip_columns:
                 ignore_blank_headers = True
 
         # Set headers
@@ -195,9 +197,11 @@ class Stream(object):
             self.__headers_row = headers
             self.__headers_row_last = headers
         elif isinstance(headers, (tuple, list)):
-            if (len(headers) == 2 and
-                    isinstance(headers[0], int) and
-                    isinstance(headers[1], int)):
+            if (
+                len(headers) == 2
+                and isinstance(headers[0], int)
+                and isinstance(headers[1], int)
+            ):
                 self.__headers_row = headers[0]
                 self.__headers_row_last = headers[1]
             else:
@@ -213,12 +217,12 @@ class Stream(object):
             if isinstance(directive, int):
                 self.__pick_rows_by_numbers.append(directive)
             elif isinstance(directive, dict):
-                if directive['type'] == 'regex':
-                    self.__pick_rows_by_patterns.append(re.compile(directive['value']))
-                elif directive['type'] == 'preset' and directive['value'] == 'blank':
-                    self.__pick_rows_by_presets['blank'] = True
+                if directive["type"] == "regex":
+                    self.__pick_rows_by_patterns.append(re.compile(directive["value"]))
+                elif directive["type"] == "preset" and directive["value"] == "blank":
+                    self.__pick_rows_by_presets["blank"] = True
                 else:
-                    raise ValueError('Not supported pick rows: %s' % directive)
+                    raise ValueError("Not supported pick rows: %s" % directive)
             else:
                 self.__pick_rows_by_comments.append(str(directive))
 
@@ -232,17 +236,17 @@ class Stream(object):
             if isinstance(directive, int):
                 self.__skip_rows_by_numbers.append(directive)
             elif isinstance(directive, dict):
-                if directive['type'] == 'regex':
-                    self.__skip_rows_by_patterns.append(re.compile(directive['value']))
-                elif directive['type'] == 'preset' and directive['value'] == 'blank':
-                    self.__skip_rows_by_presets['blank'] = True
+                if directive["type"] == "regex":
+                    self.__skip_rows_by_patterns.append(re.compile(directive["value"]))
+                elif directive["type"] == "preset" and directive["value"] == "blank":
+                    self.__skip_rows_by_presets["blank"] = True
                 else:
-                    raise ValueError('Not supported skip rows: %s' % directive)
+                    raise ValueError("Not supported skip rows: %s" % directive)
             else:
                 self.__skip_rows_by_comments.append(str(directive))
 
         # Support for pathlib.Path
-        if hasattr(source, 'joinpath'):
+        if hasattr(source, "joinpath"):
             source = str(source)
 
         # Set attributes
@@ -351,40 +355,40 @@ class Stream(object):
                     loader_class = helpers.import_attribute(loader_path)
             if loader_class is not None:
                 loader_options = helpers.extract_options(options, loader_class.options)
-                if compression and 'http_stream' in loader_class.options:
-                    loader_options['http_stream'] = False
+                if compression and "http_stream" in loader_class.options:
+                    loader_options["http_stream"] = False
                 self.__loader = loader_class(
-                    bytes_sample_size=self.__bytes_sample_size,
-                    **loader_options)
+                    bytes_sample_size=self.__bytes_sample_size, **loader_options
+                )
 
         # Zip compression
-        if compression == 'zip' and six.PY3:
-            source = self.__loader.load(source, mode='b')
+        if compression == "zip" and six.PY3:
+            source = self.__loader.load(source, mode="b")
             with zipfile.ZipFile(source) as archive:
                 name = archive.namelist()[0]
-                if 'filename' in options.keys():
-                    name = options['filename']
-                    del options['filename']
+                if "filename" in options.keys():
+                    name = options["filename"]
+                    del options["filename"]
                 with archive.open(name) as file:
-                    source = tempfile.NamedTemporaryFile(suffix='.' + name)
+                    source = tempfile.NamedTemporaryFile(suffix="." + name)
                     for line in file:
                         source.write(line)
                     source.seek(0)
             # We redefine loader/format/schema after decompression
             self.__loader = StreamLoader(bytes_sample_size=self.__bytes_sample_size)
             format = self.__format or helpers.detect_scheme_and_format(source.name)[1]
-            scheme = 'stream'
+            scheme = "stream"
 
         # Gzip compression
-        elif compression == 'gz' and six.PY3:
-            name = ''
+        elif compression == "gz" and six.PY3:
+            name = ""
             if isinstance(source, str):
-                name = source.replace('.gz', '')
-            source = gzip.open(self.__loader.load(source, mode='b'))
+                name = source.replace(".gz", "")
+            source = gzip.open(self.__loader.load(source, mode="b"))
             # We redefine loader/format/schema after decompression
             self.__loader = StreamLoader(bytes_sample_size=self.__bytes_sample_size)
             format = self.__format or helpers.detect_scheme_and_format(name)[1]
-            scheme = 'stream'
+            scheme = "stream"
 
         # Not supported compression
         elif compression:
@@ -392,9 +396,13 @@ class Stream(object):
             raise exceptions.TabulatorException(message % compression)
 
         # Attach stats to the loader
-        if getattr(self.__loader, 'attach_stats', None):
-            self.__stats = {'size': 0, 'hash': '', 'hashing_algorithm': self.__hashing_algorithm}
-            getattr(self.__loader, 'attach_stats')(self.__stats)
+        if getattr(self.__loader, "attach_stats", None):
+            self.__stats = {
+                "size": 0,
+                "hash": "",
+                "hashing_algorithm": self.__hashing_algorithm,
+            }
+            getattr(self.__loader, "attach_stats")(self.__stats)
 
         # Initiate parser
         parser_class = self.__custom_parsers.get(format)
@@ -409,15 +417,16 @@ class Stream(object):
                 raise exceptions.FormatError(message)
             parser_class = helpers.import_attribute(config.PARSERS[format])
         parser_options = helpers.extract_options(options, parser_class.options)
-        parser_options["stream"] = self
-        self.__parser = parser_class(self.__loader,
-                force_parse=self.__force_parse,
-                **parser_options)
+        if "stream" in parser_class.options:
+            parser_options["stream"] = self
+        self.__parser = parser_class(
+            self.__loader, force_parse=self.__force_parse, **parser_options
+        )
 
         # Bad options
         if options:
             message = 'Not supported option(s) "%s" for scheme "%s" and format "%s"'
-            message = message % (', '.join(options), scheme, format)
+            message = message % (", ".join(options), scheme, format)
             warnings.warn(message, UserWarning)
 
         # Open and setup
@@ -436,16 +445,14 @@ class Stream(object):
         return self
 
     def close(self):
-        """Closes the stream.
-        """
+        """Closes the stream."""
         self.__parser.close()
         self.__row_number = 0
 
     def reset(self):
-        """Resets the stream pointer to the beginning of the file.
-        """
+        """Resets the stream pointer to the beginning of the file."""
         if self.__row_number > self.__sample_size:
-            self.__stats = {'size': 0, 'hash': ''}
+            self.__stats = {"size": 0, "hash": ""}
             self.__parser.reset()
             self.__extract_sample()
             self.__extract_headers()
@@ -489,7 +496,7 @@ class Stream(object):
             str: scheme
 
         """
-        return self.__actual_scheme or 'inline'
+        return self.__actual_scheme or "inline"
 
     @property
     def format(self):
@@ -499,7 +506,7 @@ class Stream(object):
             str: format
 
         """
-        return self.__actual_format or 'inline'
+        return self.__actual_format or "inline"
 
     @property
     def encoding(self):
@@ -509,7 +516,7 @@ class Stream(object):
             str: encoding
 
         """
-        return self.__actual_encoding or 'no'
+        return self.__actual_encoding or "no"
 
     @property
     def compression(self):
@@ -519,7 +526,7 @@ class Stream(object):
             str: compression
 
         """
-        return self.__actual_compression or 'no'
+        return self.__actual_compression or "no"
 
     @property
     def fragment(self):
@@ -530,7 +537,7 @@ class Stream(object):
 
         """
         if self.__parser:
-            return getattr(self.__parser, 'fragment', None)
+            return getattr(self.__parser, "fragment", None)
         return None
 
     @property
@@ -542,7 +549,7 @@ class Stream(object):
 
         """
         if self.__parser:
-            return getattr(self.__parser, 'dialect', {})
+            return getattr(self.__parser, "dialect", {})
         return None
 
     @property
@@ -554,7 +561,7 @@ class Stream(object):
 
         """
         if self.__stats:
-            return self.__stats['size']
+            return self.__stats["size"]
 
     @property
     def hash(self):
@@ -566,7 +573,7 @@ class Stream(object):
 
         """
         if self.__stats:
-            return self.__stats['hash']
+            return self.__stats["hash"]
 
     @property
     def sample(self):
@@ -636,9 +643,7 @@ class Stream(object):
             raise exceptions.TabulatorException(message)
 
         # Create iterator
-        iterator = chain(
-            self.__sample_extended_rows,
-            self.__parser.extended_rows)
+        iterator = chain(self.__sample_extended_rows, self.__parser.extended_rows)
         iterator = self.__apply_processors(iterator)
 
         # Yield rows from iterator
@@ -649,7 +654,9 @@ class Stream(object):
                     count += 1
                     if self.__limit_rows or self.__offset_rows:
                         offset = self.__offset_rows or 0
-                        limit = self.__limit_rows + offset if self.__limit_rows else None
+                        limit = (
+                            self.__limit_rows + offset if self.__limit_rows else None
+                        )
                         if offset and count <= offset:
                             continue
                         if limit and count > limit:
@@ -663,7 +670,9 @@ class Stream(object):
                         yield row
         except UnicodeError as error:
             message = 'Cannot parse the source "%s" using "%s" encoding at "%s"'
-            raise exceptions.EncodingError(message % (self.__source, error.encoding, error.start))
+            raise exceptions.EncodingError(
+                message % (self.__source, error.encoding, error.start)
+            )
         except Exception as error:
             raise exceptions.SourceError(str(error))
 
@@ -689,7 +698,7 @@ class Stream(object):
                 break
         return result
 
-    def save(self, target, format=None,  encoding=None, **options):
+    def save(self, target, format=None, encoding=None, **options):
         """Save stream to the local filesystem.
 
         # Arguments
@@ -723,12 +732,14 @@ class Stream(object):
         writer_options = helpers.extract_options(options, writer_class.options)
         if options:
             message = 'Not supported options "%s" for format "%s"'
-            message = message % (', '.join(options), format)
+            message = message % (", ".join(options), format)
             raise exceptions.TabulatorException(message)
 
         # Write data to target
         writer = writer_class(**writer_options)
-        return writer.write(self.iter(), target, headers=self.headers, encoding=encoding)
+        return writer.write(
+            self.iter(), target, headers=self.headers, encoding=encoding
+        )
 
     # Private
 
@@ -752,7 +763,9 @@ class Stream(object):
                 break
             except UnicodeError as error:
                 message = 'Cannot parse the source "%s" using "%s" encoding at "%s"'
-                raise exceptions.EncodingError(message % (self.__source, error.encoding, error.start))
+                raise exceptions.EncodingError(
+                    message % (self.__source, error.encoding, error.start)
+                )
             except Exception as error:
                 raise exceptions.SourceError(str(error))
 
@@ -764,7 +777,7 @@ class Stream(object):
 
         # Sample is too short
         if self.__headers_row > self.__sample_size:
-            message = 'Headers row (%s) can\'t be more than sample_size (%s)'
+            message = "Headers row (%s) can't be more than sample_size (%s)"
             message = message % (self.__headers_row, self.__sample_size)
             raise exceptions.TabulatorException(message)
 
@@ -786,58 +799,73 @@ class Stream(object):
                         if not self.__headers[index]:
                             self.__headers[index] = headers[index]
                         else:
-                            if (self.__multiline_headers_duplicates or
-                                    last_merged.get(index) != headers[index]):
+                            if (
+                                self.__multiline_headers_duplicates
+                                or last_merged.get(index) != headers[index]
+                            ):
                                 self.__headers[index] += (
-                                    self.__multiline_headers_joiner + headers[index])
+                                    self.__multiline_headers_joiner + headers[index]
+                                )
                         last_merged[index] = headers[index]
             if row_number == self.__headers_row_last:
                 break
 
         # Ignore headers
-        if (self.__ignore_blank_headers or
-                self.__ignore_listed_headers is not None or
-                self.__ignore_not_listed_headers is not None):
+        if (
+            self.__ignore_blank_headers
+            or self.__ignore_listed_headers is not None
+            or self.__ignore_not_listed_headers is not None
+        ):
             self.__ignored_headers_indexes = []
             raw_headers, self.__headers = self.__headers, []
             for index, header in list(enumerate(raw_headers)):
                 ignore = False
                 # Ignore blank headers
-                if header in ['', None]:
+                if header in ["", None]:
                     ignore = True
                 # Ignore listed headers
                 if self.__ignore_listed_headers is not None:
-                    if (header in self.__ignore_listed_headers or
-                            index + 1 in self.__ignore_listed_headers):
+                    if (
+                        header in self.__ignore_listed_headers
+                        or index + 1 in self.__ignore_listed_headers
+                    ):
                         ignore = True
                     # Regex
                     for item in self.__ignore_listed_headers:
-                        if isinstance(item, dict) and item.get('type') == 'regex':
-                            if bool(re.search(item['value'], header)):
+                        if isinstance(item, dict) and item.get("type") == "regex":
+                            if bool(re.search(item["value"], header)):
                                 ignore = True
                 # Ignore not-listed headers
                 if self.__ignore_not_listed_headers is not None:
-                    if (header not in self.__ignore_not_listed_headers and
-                            index + 1 not in self.__ignore_not_listed_headers):
+                    if (
+                        header not in self.__ignore_not_listed_headers
+                        and index + 1 not in self.__ignore_not_listed_headers
+                    ):
                         ignore = True
                     # Regex
                     for item in self.__ignore_not_listed_headers:
-                        if isinstance(item, dict) and item.get('type') == 'regex':
-                            if bool(re.search(item['value'], header)):
+                        if isinstance(item, dict) and item.get("type") == "regex":
+                            if bool(re.search(item["value"], header)):
                                 ignore = False
                 # Add to the list and skip
                 if ignore:
                     self.__ignored_headers_indexes.append(index)
                     continue
                 self.__headers.append(header)
-            self.__ignored_headers_indexes = list(sorted(self.__ignored_headers_indexes, reverse=True))
+            self.__ignored_headers_indexes = list(
+                sorted(self.__ignored_headers_indexes, reverse=True)
+            )
 
         # Limit/offset fields
         if self.__limit_fields or self.__offset_fields:
             ignore = []
             headers = []
             min = self.__offset_fields or 0
-            max = self.__limit_fields + min if self.__limit_fields else len(self.__headers)
+            max = (
+                self.__limit_fields + min
+                if self.__limit_fields
+                else len(self.__headers)
+            )
             for position, header in enumerate(self.__headers, start=1):
                 if position <= min:
                     ignore.append(position - 1)
@@ -849,24 +877,26 @@ class Stream(object):
             for index in ignore:
                 if index not in self.__ignored_headers_indexes:
                     self.__ignored_headers_indexes.append(index)
-            self.__ignored_headers_indexes = list(sorted(self.__ignored_headers_indexes, reverse=True))
+            self.__ignored_headers_indexes = list(
+                sorted(self.__ignored_headers_indexes, reverse=True)
+            )
             self.__headers = headers
 
         # Remove headers from data
         if not keyed_source:
-            del self.__sample_extended_rows[:self.__headers_row_last]
+            del self.__sample_extended_rows[: self.__headers_row_last]
 
         # Stringify headers
         if isinstance(self.__headers, list):
             str_headers = []
             for header in self.__headers:
-                str_headers.append(six.text_type(header) if header is not None else '')
+                str_headers.append(six.text_type(header) if header is not None else "")
             self.__headers = str_headers
 
     def __detect_html(self):
 
         # Prepare text
-        text = ''
+        text = ""
         for row_number, headers, row in self.__sample_extended_rows:
             for value in row:
                 if isinstance(value, six.string_types):
@@ -875,7 +905,7 @@ class Stream(object):
         # Detect html content
         html_source = helpers.detect_html(text)
         if html_source:
-            message = 'Format has been detected as HTML (not supported)'
+            message = "Format has been detected as HTML (not supported)"
             raise exceptions.FormatError(message)
 
     def __apply_processors(self, iterator):
@@ -890,7 +920,11 @@ class Stream(object):
                         keyed_row = dict(zip(headers, row))
                         row = [keyed_row.get(header) for header in self.__headers]
                     elif self.__ignored_headers_indexes:
-                        row = [value for index, value in enumerate(row) if index not in self.__ignored_headers_indexes]
+                        row = [
+                            value
+                            for index, value in enumerate(row)
+                            if index not in self.__ignored_headers_indexes
+                        ]
                     headers = self.__headers
 
                 # Skip rows by numbers/comments
@@ -901,11 +935,11 @@ class Stream(object):
 
         # Skip nagative rows processor
         def skip_negative_rows(extended_rows):
-            '''
+            """
             This processor will skip rows which counts from the end, e.g.
             -1: skip last row, -2: skip pre-last row, etc.
             Rows to skip are taken from  Stream.__skip_rows_by_numbers
-            '''
+            """
             rows_to_skip = [n for n in self.__skip_rows_by_numbers if n < 0]
             buffer_size = abs(min(rows_to_skip))
             # collections.deque - takes O[1] time to push/pop values from any side.
@@ -958,11 +992,11 @@ class Stream(object):
             cell = row[0] if row else None
 
             # Handle blank cell/row
-            if cell in [None, '']:
-                if '' in self.__pick_rows_by_comments:
+            if cell in [None, ""]:
+                if "" in self.__pick_rows_by_comments:
                     return False
-                if self.__pick_rows_by_presets.get('blank'):
-                    if not list(filter(lambda cell: cell not in [None, ''], row)):
+                if self.__pick_rows_by_presets.get("blank"):
+                    if not list(filter(lambda cell: cell not in [None, ""], row)):
                         return False
                 return True
 
@@ -990,11 +1024,11 @@ class Stream(object):
             cell = row[0] if row else None
 
             # Handle blank cell/row
-            if cell in [None, '']:
-                if '' in self.__skip_rows_by_comments:
+            if cell in [None, ""]:
+                if "" in self.__skip_rows_by_comments:
                     return True
-                if self.__skip_rows_by_presets.get('blank'):
-                    if not list(filter(lambda cell: cell not in [None, ''], row)):
+                if self.__skip_rows_by_presets.get("blank"):
+                    if not list(filter(lambda cell: cell not in [None, ""], row)):
                         return True
                 return False
 
