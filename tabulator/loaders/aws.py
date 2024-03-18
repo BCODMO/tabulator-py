@@ -59,6 +59,7 @@ class AWSLoader(Loader):
 
         # Prepare bytes
         try:
+            """
             try:
                 shm_key = _encode_string(source)
                 existing_shm = shared_memory.SharedMemory(name=shm_key)
@@ -71,19 +72,19 @@ class AWSLoader(Loader):
                 # existing_shm.close()
                 print(f"Took {time.time() - start} for shared memory")
             except:
-                # print("Not using shared memory")
-                start = time.time()
-                parts = urlparse(source, allow_fragments=False)
-                response = self.__s3_client.get_object(
-                    Bucket=parts.netloc, Key=parts.path[1:]
-                )
-                # https://github.com/frictionlessdata/tabulator-py/issues/271
-                bytes = io.BufferedRandom(io.BytesIO())
-                contents = response["Body"].read()
-                bytes.write(contents)
-                bytes.seek(0)
-                print(f"Took {time.time() - start} to load in the file")
-                print(f"Passing on at {time.time()}")
+            """
+            # print("Not using shared memory")
+            start = time.time()
+            parts = urlparse(source, allow_fragments=False)
+            response = self.__s3_client.get_object(
+                Bucket=parts.netloc, Key=parts.path[1:]
+            )
+            # https://github.com/frictionlessdata/tabulator-py/issues/271
+            bytes = io.BufferedRandom(io.BytesIO())
+            contents = response["Body"].read()
+            bytes.write(contents)
+            bytes.seek(0)
+            print(f"Took {time.time() - start} to load in the file")
 
             if self.__stats:
                 bytes = helpers.BytesStatsWrapper(bytes, self.__stats)
