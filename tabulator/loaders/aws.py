@@ -51,12 +51,12 @@ class AWSLoader(Loader):
         )
         self.__s3_client = boto3.client("s3", endpoint_url=self.__s3_endpoint_url)
         self.__stats = None
+        self.encoding = None
 
     def attach_stats(self, stats):
         self.__stats = stats
 
     def load(self, source, mode="t", encoding=None):
-
         # Prepare bytes
         try:
             """
@@ -100,6 +100,7 @@ class AWSLoader(Loader):
             sample = bytes.read(self.__bytes_sample_size)
             bytes.seek(0)
             encoding = helpers.detect_encoding(sample, encoding)
+            self.encoding = encoding
 
         # Prepare chars
         chars = io.TextIOWrapper(bytes, encoding)
