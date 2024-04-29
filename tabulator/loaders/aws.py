@@ -59,20 +59,6 @@ class AWSLoader(Loader):
     def load(self, source, mode="t", encoding=None):
         # Prepare bytes
         try:
-            """
-            try:
-                shm_key = _encode_string(source)
-                existing_shm = shared_memory.SharedMemory(name=shm_key)
-                print("Using existing shared memory")
-
-                start = time.time()
-                bytes = io.BufferedRandom(io.BytesIO())
-                bytes.write(existing_shm.buf)
-                bytes.seek(0)
-                # existing_shm.close()
-                print(f"Took {time.time() - start} for shared memory")
-            except:
-            """
             # print("Not using shared memory")
             start = time.time()
             parts = urlparse(source, allow_fragments=False)
@@ -84,7 +70,12 @@ class AWSLoader(Loader):
             contents = response["Body"].read()
             bytes.write(contents)
             bytes.seek(0)
-            print(f"Took {time.time() - start} to load in the file")
+            try:
+                print(
+                    f"Took {round(time.time() - start, 3)} to load in {os.path.basename(source)}"
+                )
+            except:
+                pass
 
             if self.__stats:
                 bytes = helpers.BytesStatsWrapper(bytes, self.__stats)

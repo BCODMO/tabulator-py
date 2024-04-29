@@ -15,24 +15,23 @@ from .. import config
 
 # Module API
 
+
 class CSVParser(Parser):
-    """Parser to parse CSV data format.
-    """
+    """Parser to parse CSV data format."""
 
     # Public
 
     options = [
-        'delimiter',
-        'doublequote',
-        'escapechar',
-        'quotechar',
-        'quoting',
-        'skipinitialspace',
-        'lineterminator'
+        "delimiter",
+        "doublequote",
+        "escapechar",
+        "quotechar",
+        "quoting",
+        "skipinitialspace",
+        "lineterminator",
     ]
 
     def __init__(self, loader, force_parse=False, **options):
-
         # Make bytes
         if six.PY2:
             for key, value in options.items():
@@ -55,7 +54,7 @@ class CSVParser(Parser):
     def open(self, source, encoding=None):
         self.close()
         self.__chars = self.__loader.load(source, encoding=encoding)
-        self.__encoding = getattr(self.__chars, 'encoding', encoding)
+        self.__encoding = getattr(self.__chars, "encoding", encoding)
         if self.__encoding:
             self.__encoding.lower()
         self.reset()
@@ -76,14 +75,14 @@ class CSVParser(Parser):
     def dialect(self):
         if self.__dialect:
             dialect = {
-                'delimiter': self.__dialect.delimiter,
-                'doubleQuote': self.__dialect.doublequote,
-                'lineTerminator': self.__dialect.lineterminator,
-                'quoteChar': self.__dialect.quotechar,
-                'skipInitialSpace': self.__dialect.skipinitialspace,
+                "delimiter": self.__dialect.delimiter,
+                "doubleQuote": self.__dialect.doublequote,
+                "lineTerminator": self.__dialect.lineterminator,
+                "quoteChar": self.__dialect.quotechar,
+                "skipInitialSpace": self.__dialect.skipinitialspace,
             }
             if self.__dialect.escapechar is not None:
-                dialect['escapeChar'] = self.__dialect.escapechar
+                dialect["escapeChar"] = self.__dialect.escapechar
             return dialect
 
     @property
@@ -93,17 +92,16 @@ class CSVParser(Parser):
     # Private
 
     def __iter_extended_rows(self):
-
         # For PY2 encode/decode
         if six.PY2:
             # Reader requires utf-8 encoded stream
-            bytes = iterencode(self.__chars, 'utf-8')
+            bytes = iterencode(self.__chars, "utf-8")
             sample, dialect = self.__prepare_dialect(bytes)
             items = csv.reader(chain(sample, bytes), dialect=dialect)
             for row_number, item in enumerate(items, start=1):
                 values = []
                 for value in item:
-                    value = value.decode('utf-8')
+                    value = value.decode("utf-8")
                     values.append(value)
                 yield (row_number, None, list(values))
 
@@ -115,7 +113,6 @@ class CSVParser(Parser):
                 yield (row_number, None, list(item))
 
     def __prepare_dialect(self, stream):
-
         # Get sample
         sample = []
         while True:
@@ -128,19 +125,21 @@ class CSVParser(Parser):
 
         # Get dialect
         try:
-            separator = b'' if six.PY2 else ''
-            delimiter = self.__options.get('delimiter', ',\t;|')
+            separator = b"" if six.PY2 else ""
+            delimiter = self.__options.get("delimiter", ",\t;|")
             dialect = csv.Sniffer().sniff(separator.join(sample), delimiter)
             if not dialect.escapechar:
                 dialect.doublequote = True
         except csv.Error:
+
             class dialect(csv.excel):
                 pass
+
         for key, value in self.__options.items():
             setattr(dialect, key, value)
         # https://github.com/frictionlessdata/FrictionlessDarwinCore/issues/1
-        if getattr(dialect, 'quotechar', None) == '':
-            setattr(dialect, 'quoting', csv.QUOTE_NONE)
+        if getattr(dialect, "quotechar", None) == "":
+            setattr(dialect, "quoting", csv.QUOTE_NONE)
 
         self.__dialect = dialect
         return sample, dialect
