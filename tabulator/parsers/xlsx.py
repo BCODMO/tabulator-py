@@ -223,7 +223,6 @@ def convert_excel_date_format_string(excel_date):
     https://support.office.com/en-us/article/review-guidelines-for-customizing-a-number-format-c0a1d1fa-d3f4-4018-96b7-9c9354dd99f5
 
     """
-    print("IN CONVERT EXCEL NUMBER", excel_date)
     # The python date string that is being built
     python_date = ""
     # The excel code currently being parsed
@@ -325,7 +324,6 @@ def convert_excel_date_format_string(excel_date):
                     minute_or_month_buffer = ""
             else:
                 # Have to abandon this attempt to convert because the code is not recognized
-                print("Abandoned", ec)
                 return None
             prev_code = ec
             excel_code = ""
@@ -357,7 +355,6 @@ def convert_excel_date_format_string(excel_date):
                 python_date += EXCEL_MONTH_CODES[ec]
         else:
             return None
-    print(f"python date {python_date}")
     return python_date
 
 

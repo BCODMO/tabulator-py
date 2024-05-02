@@ -73,7 +73,10 @@ def test_stream_xlsx_merged_cells_fill():
 def test_stream_xlsx_adjust_floating_point_error():
     source = "data/special/adjust_floating_point_error.xlsx"
     with Stream(
-        source, headers=1, ignore_blank_headers=True, preserve_formatting=True,
+        source,
+        headers=1,
+        ignore_blank_headers=True,
+        preserve_formatting=True,
     ) as stream:
         assert stream.read(keyed=True)[1]["actual PO4 (values)"] == 274.65999999999997
     with Stream(
@@ -112,6 +115,15 @@ def test_stream_xlsx_preserve_formatting():
         ]
 
 
+def test_stream_xlsx_preserve_formatting_square_bracket():
+    source = "data/special/square_bracket_date.xlsx"
+    with Stream(source, headers=1, preserve_formatting=True) as stream:
+        assert stream.read() == [
+            ["Nov-17"],
+            ["Jan-18"],
+        ]
+
+
 def test_stream_xlsx_preserve_formatting_percentage():
     source = "data/special/preserve-formatting-percentage.xlsx"
     with Stream(source, headers=1, preserve_formatting=True) as stream:
@@ -132,7 +144,11 @@ def test_stream_xlsx_preserve_formatting_number_multicode():
 
 def test_stream_xlsx_scientific_notation():
     source = "data/special/test_scientific_notation.xlsx"
-    with Stream(source, headers=1, preserve_formatting=True,) as stream:
+    with Stream(
+        source,
+        headers=1,
+        preserve_formatting=True,
+    ) as stream:
         assert stream.read() == [["4.273E-07"]]
 
 
@@ -178,7 +194,6 @@ def test_stream_save_xlsx_sheet_name(tmpdir):
 
 
 def test_parser_xlsx():
-
     source = "data/table.xlsx"
     encoding = None
     loader = Mock()
