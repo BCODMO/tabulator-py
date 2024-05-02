@@ -23,8 +23,7 @@ from .. import helpers
 
 
 class XLSXParser(Parser):
-    """Parser to parse Excel modern `xlsx` data format.
-    """
+    """Parser to parse Excel modern `xlsx` data format."""
 
     # Public
 
@@ -142,7 +141,9 @@ class XLSXParser(Parser):
                 row_number,
                 None,
                 extract_row_values(
-                    row, self.__preserve_formatting, self.__adjust_floating_point_error,
+                    row,
+                    self.__preserve_formatting,
+                    self.__adjust_floating_point_error,
                 ),
             )
 
@@ -222,6 +223,7 @@ def convert_excel_date_format_string(excel_date):
     https://support.office.com/en-us/article/review-guidelines-for-customizing-a-number-format-c0a1d1fa-d3f4-4018-96b7-9c9354dd99f5
 
     """
+    print("IN CONVERT EXCEL NUMBER", excel_date)
     # The python date string that is being built
     python_date = ""
     # The excel code currently being parsed
@@ -231,6 +233,8 @@ def convert_excel_date_format_string(excel_date):
     char_escaped = False
     # If we are in a quotation block (surrounded by "")
     quotation_block = False
+    # If we are in a square bracket block (surruonded by [])
+    square_bracket_block = False
     # Variables used for checking if a code should be a minute or a month
     checking_minute_or_month = False
     minute_or_month_buffer = ""
@@ -255,6 +259,10 @@ def convert_excel_date_format_string(excel_date):
             else:
                 python_date += c
             continue
+        if square_bracket_block:
+            if c == "]":
+                square_bracket_block = False
+            continue
         # The start of a quotation block
         if c == '"':
             quotation_block = True
@@ -262,6 +270,9 @@ def convert_excel_date_format_string(excel_date):
         if c == EXCEL_SECTION_DIVIDER:
             # We ignore excel sections for datetimes
             break
+        if c == "[":
+            square_bracket_block = True
+            continue
 
         is_escape_char = c == EXCEL_ESCAPE_CHAR
         # The am/pm and a/p code add some complications, need to make sure we are not that code
@@ -314,6 +325,7 @@ def convert_excel_date_format_string(excel_date):
                     minute_or_month_buffer = ""
             else:
                 # Have to abandon this attempt to convert because the code is not recognized
+                print("Abandoned", ec)
                 return None
             prev_code = ec
             excel_code = ""
@@ -345,6 +357,7 @@ def convert_excel_date_format_string(excel_date):
                 python_date += EXCEL_MONTH_CODES[ec]
         else:
             return None
+    print(f"python date {python_date}")
     return python_date
 
 
@@ -360,7 +373,8 @@ def eformat(f, prec, exp_digits):
 
 
 def convert_excel_number_format_string(
-    excel_number, value,
+    excel_number,
+    value,
 ):
     """
     A basic attempt to convert excel number_format to a number string
@@ -430,7 +444,9 @@ def convert_excel_number_format_string(
 
 
 def extract_row_values(
-    row, preserve_formatting=False, adjust_floating_point_error=False,
+    row,
+    preserve_formatting=False,
+    adjust_floating_point_error=False,
 ):
     if preserve_formatting:
         values = []
@@ -457,7 +473,8 @@ def extract_row_values(
                 value = round(cell.value, precision)
             elif isinstance(cell.value, (int, float)):
                 new_value = convert_excel_number_format_string(
-                    number_format, cell.value,
+                    number_format,
+                    cell.value,
                 )
                 if new_value:
                     value = new_value
