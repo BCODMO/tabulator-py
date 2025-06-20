@@ -15,24 +15,26 @@ from .. import config
 
 # Module API
 
+
 class RemoteLoader(Loader):
-    """Loader to load source from the web.
-    """
+    """Loader to load source from the web."""
 
     # Public
 
     remote = True
     options = [
-        'http_session',
-        'http_stream',
-        'http_timeout',
+        "http_session",
+        "http_stream",
+        "http_timeout",
     ]
 
-    def __init__(self,
-                 bytes_sample_size=config.DEFAULT_BYTES_SAMPLE_SIZE,
-                 http_session=None,
-                 http_stream=True,
-                 http_timeout=None):
+    def __init__(
+        self,
+        bytes_sample_size=config.DEFAULT_BYTES_SAMPLE_SIZE,
+        http_session=None,
+        http_stream=True,
+        http_timeout=None,
+    ):
 
         # Create default session
         if not http_session:
@@ -53,14 +55,16 @@ class RemoteLoader(Loader):
     def attach_stats(self, stats):
         self.__stats = stats
 
-    def load(self, source, mode='t', encoding=None):
+    def load(self, source, mode="t", encoding=None):
 
         # Prepare source
         source = helpers.requote_uri(source)
 
         # Prepare bytes
         try:
-            bytes = _RemoteStream(source, self.__http_session, self.__http_timeout).open()
+            bytes = _RemoteStream(
+                source, self.__http_session, self.__http_timeout
+            ).open()
             if not self.__http_stream:
                 buffer = io.BufferedRandom(io.BytesIO())
                 buffer.write(bytes.read())
@@ -72,12 +76,12 @@ class RemoteLoader(Loader):
             raise exceptions.HTTPError(str(exception))
 
         # Return bytes
-        if mode == 'b':
+        if mode == "b":
             return bytes
 
         # Detect encoding
         if self.__bytes_sample_size:
-            sample = bytes.read(self.__bytes_sample_size)[:self.__bytes_sample_size]
+            sample = bytes.read(self.__bytes_sample_size)[: self.__bytes_sample_size]
             bytes.seek(0)
             encoding = helpers.detect_encoding(sample, encoding)
 
@@ -88,6 +92,7 @@ class RemoteLoader(Loader):
 
 
 # Internal
+
 
 class _RemoteStream(object):
 
@@ -130,15 +135,19 @@ class _RemoteStream(object):
     def flush(self):
         pass
 
-    def read(self, size=None):
+    def read(self, size=-1):
+        if size == -1:
+            size = None
         return self.__response.raw.read(size)
 
-    def read1(self, size=None):
-        return self.__response.raw.read(size)
+    def read1(self, size=-1):
+        return self.read(size)
 
     def seek(self, offset, whence=0):
         assert offset == 0
         assert whence == 0
-        self.__response = self.__session.get(self.__source, stream=True, timeout=self.__timeout)
+        self.__response = self.__session.get(
+            self.__source, stream=True, timeout=self.__timeout
+        )
         self.__response.raise_for_status()
         self.__response.raw.decode_content = True
