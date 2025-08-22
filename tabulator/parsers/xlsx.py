@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from decimal import Decimal, ROUND_HALF_UP
 import os
 import io
 import six
@@ -400,7 +401,10 @@ def convert_excel_number_format_string(
         return None
     if len(code) < 2:
         # No decimals
-        new_value = "{0:.0f}".format(value)
+        # We use Decimal to fix floating point error
+        decimal_value = Decimal(str(value))
+        quantized = decimal_value.quantize(0, rounding=ROUND_HALF_UP)
+        new_value = str(quantized)
 
     # Currently we do not support "engineering notation"
     elif re.match(r"^#+0*E\+0*$", code[1]):
@@ -428,8 +432,12 @@ def convert_excel_number_format_string(
                 number_hash += 1
             else:
                 break
-        string_format_code = "{0:." + str(len(decimal_section)) + "f}"
-        new_value = string_format_code.format(value)
+
+        # Round using Decimal to prevent floating point error
+        decimal_value = Decimal(str(value))
+        precision = Decimal(10) ** -len(decimal_section)
+        quantized = decimal_value.quantize(precision, rounding=ROUND_HALF_UP)
+        new_value = str(quantized)
         if number_hash > 0:
             for i in range(number_hash):
                 if new_value.endswith("0"):
