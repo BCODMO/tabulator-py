@@ -465,21 +465,17 @@ def extract_row_values(
                 temporal_format = convert_excel_date_format_string(number_format)
                 if temporal_format:
                     value = cell.value.strftime(temporal_format)
-            elif (
-                adjust_floating_point_error
-                and isinstance(cell.value, float)
-                and number_format == "General"
-            ):
-                # We have a float with format General
-                # Calculate the number of integer digits
-                integer_digits = len(str(int(cell.value)))
-                # Set the precision to 15 minus the number of integer digits
-                precision = 15 - (integer_digits)
-                value = round(cell.value, precision)
             elif isinstance(cell.value, (int, float)):
+                if adjust_floating_point_error and isinstance(cell.value, float):
+                    # We have a float with potential floating point error
+                    # Calculate the number of integer digits
+                    integer_digits = len(str(int(cell.value)))
+                    # Set the precision to 15 minus the number of integer digits
+                    precision = 15 - (integer_digits)
+                    value = round(cell.value, precision)
                 new_value = convert_excel_number_format_string(
                     number_format,
-                    cell.value,
+                    value,
                 )
                 if new_value:
                     value = new_value
